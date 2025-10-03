@@ -14,37 +14,45 @@
   </head>
 
   <body>
+    <div class="sr-header">
+    </div>
+    <form action="/create-checkout-session" method="POST">
+
     <div class="sr-root">
       <div class="sr-main">
+
+        {% for item in products %}
         <section class="container">
           <div>
-            <h1>Single photo</h1>
-            <h4>Purchase a Pasha original photo</h4>
+            <h1>{{item.name}}</h1>
+            <h4>{{item.description}}</h4>
 
             <div class="pasha-image">
               <img
-                src="https://picsum.photos/280/320?random=4"
+                src="{{item.images[0]}}"
                 width="140"
                 height="160"
               />
             </div>
           </div>
 
-          <form action="/create-checkout-session" method="POST">
             <div class="quantity-setter">
-              <button class="increment-btn" id="subtract" disabled type="button">-</button>
-              <input type="number" id="quantity-input" min="1" value="1" name="quantity" />
-              <button class="increment-btn" id="add" type="button">+</button>
+              <button class="increment-btn {{item.default_price}}" id="subtract_{{item.default_price}}" disabled type="button">-</button>
+              <input type="number" id="input_{{item.default_price}}" class="quantity-input" min="0" value="0" name="{{item.default_price}}" readonly>
+              <button class="increment-btn {{item.default_price}}" id="add_{{item.default_price}}" type="button">+</button>
             </div>
 
             <p class="sr-legal-text">Number of copies (max 10)</p>
 
-            <button type="submit" id="submit">Buy</button>
-          </form>
         </section>
+        {% endfor %}
 
         <div id="error-message"></div>
       </div>
+
     </div>
+    <button type="submit" id="submit">Buy</button>
+
+    </form>
   </body>
 </html>

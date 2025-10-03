@@ -23,6 +23,9 @@ stripe.set_app_info(
 stripe.api_version = '2020-08-27'
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
+products = stripe.Product.search(query="active:'true' AND metadata['blanket']:'true'")
+
+
 static_dir = str(os.path.abspath(os.path.join(
     __file__, "..", os.getenv("STATIC_DIR"))))
 app = Flask(__name__, static_folder=static_dir,
@@ -31,7 +34,7 @@ app = Flask(__name__, static_folder=static_dir,
 
 @app.route('/', methods=['GET'])
 def get_example():
-    return render_template('index.html')
+    return render_template('index.html', products = products)
 
 
 @app.route('/config', methods=['GET'])
@@ -44,7 +47,7 @@ def get_publishable_key():
     })
 
 # Fetch the Checkout Session to display the JSON result on the success page
-@app.route('/checkout-session', methods=['GET'])
+@app.route('/checkout-session', methods=['GET'])    
 def get_checkout_session():
     id = request.args.get('sessionId')
     checkout_session = stripe.checkout.Session.retrieve(id)
@@ -55,6 +58,16 @@ def get_checkout_session():
 def create_checkout_session():
     quantity = request.form.get('quantity', 1)
     domain_url = os.getenv('DOMAIN')
+
+    print(quantity)
+
+    all_form_data = request.form 
+    # You can iterate through it
+    for field_name, field_value in all_form_data.items():
+        print(f"Field: {field_name}, Value: {field_value}")
+
+    # Convert form data into price/quantity array
+    dic = all_form_data.to_dict(flat = True)
 
     try:
         # Create new Checkout Session for the order
@@ -72,10 +85,7 @@ def create_checkout_session():
             cancel_url=domain_url + '/canceled.html',
             mode='payment',
             # automatic_tax={'enabled': True},
-            line_items=[{
-                'price': os.getenv('PRICE'),
-                'quantity': quantity,
-            }]
+            line_items= [{"price": key, "quantity" : value} for key, value in dic.items()]
         )
         return redirect(checkout_session.url, code=303)
     except Exception as e:
